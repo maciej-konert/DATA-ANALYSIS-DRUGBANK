@@ -8,10 +8,8 @@ from Main import (
     get_targets,
     get_genatlas_id,
     parse_drug_status,
-    parse_drug_data,
-    parse_drug_interactions,
-    parse_gene_drug_product,
 )
+from tests.Randomized_Simulation import generate_random_drugs
 
 # Sample XML data for testing
 sample_drug_xml = """
@@ -58,7 +56,6 @@ sample_drug_xml = """
 
 @pytest.fixture
 def parsed_sample_drug():
-    """Parse the sample XML and return the drug dictionary."""
     data_dict = xmltodict.parse(sample_drug_xml)
     return data_dict["drugbank"]["drug"]
 
@@ -88,7 +85,6 @@ def test_get_genatlas_id(parsed_sample_drug):
     assert get_genatlas_id(external_ids) == "GA12345"
 
 def test_parse_drug_status():
-    """Test drug status parsing with different cases."""
     drugs = [
         {"groups": {"group": ["approved", "withdrawn"]}},
         {"groups": {"group": ["approved"]}},
@@ -105,3 +101,13 @@ def test_parse_drug_status():
     assert statuses["investigational"] == 1
     assert statuses["vet_approved"] == 1
     assert approved_not_withdrawn == 2
+
+def test_generate_random_drugs():
+    file_path = "drugbank_partial.xml"
+    output_file = "drugbank_partial_and_generated.xml"
+    no_drugs = 105
+    generate_random_drugs(file_path, output_file, no_drugs)
+
+    with open("drugbank_partial_and_generated.xml", "r") as file:
+        data_dict = xmltodict.parse(file.read())
+    assert len(data_dict["drugbank"]["drug"]) == no_drugs + 100
